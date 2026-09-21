@@ -1,0 +1,203 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 2K of event 'cpu/cycles/P'
+# Event count (approx.): 1550858153
+#
+# Children      Self  Command  Shared Object         Symbol                    
+# ........  ........  .......  ....................  ..........................
+#
+    59.46%    55.36%  msfw     msfw                  [.] parse_packet
+            |          
+            |--56.30%--parse_packet
+            |          |          
+            |           --6.37%--memcpy (inlined)
+            |          
+             --3.16%--main
+
+    31.78%    27.83%  msfw     msfw                  [.] evaluate_packet
+            |          
+             --31.53%--evaluate_packet
+
+    19.54%    16.05%  msfw     msfw                  [.] main
+            |          
+            |--12.11%--main
+            |          
+            |--3.81%--parse_packet
+            |          
+             --3.62%--evaluate_packet
+
+     6.37%     0.00%  msfw     msfw                  [.] memcpy (inlined)
+            |
+            ---memcpy (inlined)
+
+     0.63%     0.00%  msfw     [unknown]             [.] 0xffffffffaaa00f0b
+            |
+            ---0xffffffffaaa00f0b
+               |          
+                --0.59%--0xffffffffac0833f7
+                          0xffffffffaad36646
+                          |          
+                           --0.55%--0xffffffffaaec7c94
+
+     0.59%     0.00%  msfw     [unknown]             [.] 0xffffffffac0833f7
+            |
+            ---0xffffffffac0833f7
+               0xffffffffaad36646
+               |          
+                --0.55%--0xffffffffaaec7c94
+
+     0.59%     0.00%  msfw     [unknown]             [.] 0xffffffffaad36646
+            |
+            ---0xffffffffaad36646
+               |          
+                --0.55%--0xffffffffaaec7c94
+
+     0.55%     0.00%  msfw     [unknown]             [.] 0xffffffffaaec7c94
+            |
+            ---0xffffffffaaec7c94
+
+     0.42%     0.00%  msfw     [unknown]             [.] 0xffffffffaaec6da7
+     0.42%     0.00%  msfw     [unknown]             [.] 0xffffffffaaee09c7
+     0.38%     0.00%  msfw     [unknown]             [.] 0xffffffffaaec5b54
+     0.30%     0.00%  msfw     [unknown]             [.] 0xffffffffaadef01d
+     0.09%     0.00%  msfw     [unknown]             [.] 0xffffffffaae026dc
+     0.05%     0.00%  msfw     [unknown]             [k] 0xffffffffaaa0012b
+     0.05%     0.00%  msfw     ld-linux-x86-64.so.2  [.] _dl_start_user
+     0.05%     0.00%  msfw     ld-linux-x86-64.so.2  [.] _dl_start
+     0.05%     0.00%  msfw     ld-linux-x86-64.so.2  [.] _dl_start_final (inlined)
+     0.05%     0.00%  msfw     ld-linux-x86-64.so.2  [.] _dl_sysdep_start
+     0.05%     0.00%  msfw     ld-linux-x86-64.so.2  [.] dl_main
+     0.05%     0.00%  msfw     [unknown]             [k] 0xffffffffac07bb29
+     0.04%     0.04%  msfw     [unknown]             [k] 0xffffffffaae01a5a
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaae01af4
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaae01a5e
+     0.04%     0.04%  msfw     [unknown]             [k] 0xffffffffaae218f4
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaae0272c
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaae218fb
+     0.04%     0.04%  msfw     [unknown]             [k] 0xffffffffaaec6cdb
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaaec6cde
+     0.04%     0.04%  msfw     [unknown]             [k] 0xffffffffaae02764
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaae0276f
+     0.04%     0.04%  msfw     [unknown]             [k] 0xffffffffaad0bc20
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaadeefef
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaade9a03
+     0.04%     0.04%  msfw     [unknown]             [k] 0xffffffffaad5191b
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaaec7cbd
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaaee0163
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaaedd25a
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaad5191d
+     0.04%     0.04%  msfw     [unknown]             [k] 0xffffffffaaec6163
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaaec6dd9
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaaec6164
+     0.04%     0.04%  msfw     [unknown]             [k] 0xffffffffaadf41a3
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaae01ad0
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaadf41a7
+     0.04%     0.04%  msfw     [unknown]             [k] 0xffffffffaaec6cf6
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaaec6cf9
+     0.04%     0.04%  msfw     [unknown]             [k] 0xffffffffac07f830
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffac07f838
+     0.04%     0.04%  msfw     [unknown]             [k] 0xffffffffaadf4f5e
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaadf4f60
+     0.04%     0.04%  msfw     [unknown]             [k] 0xffffffffab0a841f
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaadef04b
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffab0ac45b
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffab0a8423
+     0.04%     0.04%  msfw     [unknown]             [k] 0xffffffffaae026cd
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaae026d4
+     0.04%     0.04%  msfw     [unknown]             [k] 0xffffffffaae027d8
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaae025c0
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaaa00ef0
+     0.04%     0.04%  msfw     [unknown]             [k] 0xffffffffaaee63e7
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaaec5b36
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaaee63f5
+     0.04%     0.04%  msfw     [unknown]             [k] 0xffffffffab17b4c5
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffac0833fc
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaad98eae
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaad98a9e
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaad98705
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaae9659e
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaae96100
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffaae944d3
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffab152b46
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffab17bbd0
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffab17bb8a
+     0.04%     0.00%  msfw     [unknown]             [.] 0xffffffffab17b4c8
+     0.03%     0.03%  msfw     [unknown]             [k] 0xffffffffac07f84e
+     0.03%     0.00%  msfw     [unknown]             [.] 0xffffffffac07f851
+     0.02%     0.02%  msfw     [unknown]             [k] 0xffffffffaae09841
+     0.02%     0.00%  msfw     libc.so.6             [.] _IO_puts
+     0.02%     0.00%  msfw     libc.so.6             [.] _IO_new_file_overflow (inlined)
+     0.02%     0.00%  msfw     libc.so.6             [.] _IO_new_do_write (inlined)
+     0.02%     0.00%  msfw     libc.so.6             [.] new_do_write (inlined)
+     0.02%     0.00%  msfw     libc.so.6             [.] __libc_write (inlined)
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffaac8d7d9
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffab234e39
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffab234d91
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffab2347fe
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffab909751
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffab9095da
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffab9092b3
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffab90e9b2
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffab90d4ea
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffab9183bc
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffab91487c
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffaadbbca7
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffaadbbba6
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffaadbba6b
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffaadb8acc
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffaadf2d55
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffaadf2755
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffaadf2590
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffaae09844
+     0.02%     0.00%  msfw     ld-linux-x86-64.so.2  [.] rtld_timer_start (inlined)
+     0.02%     0.00%  msfw     libc.so.6             [.] __strnlen_ifunc
+     0.02%     0.02%  msfw     [unknown]             [k] 0xffffffffab0a1c1e
+     0.02%     0.00%  msfw     ld-linux-x86-64.so.2  [.] rtld_timer_accum (inlined)
+     0.02%     0.00%  msfw     ld-linux-x86-64.so.2  [.] rtld_timer_stop (inlined)
+     0.02%     0.00%  msfw     ld-linux-x86-64.so.2  [.] _dl_map_object_deps
+     0.02%     0.00%  msfw     ld-linux-x86-64.so.2  [.] _dl_catch_exception
+     0.02%     0.00%  msfw     ld-linux-x86-64.so.2  [.] set_catch (inlined)
+     0.02%     0.00%  msfw     ld-linux-x86-64.so.2  [.] openaux
+     0.02%     0.00%  msfw     ld-linux-x86-64.so.2  [.] _dl_map_object
+     0.02%     0.00%  msfw     ld-linux-x86-64.so.2  [.] _dl_map_object_from_fd
+     0.02%     0.00%  msfw     ld-linux-x86-64.so.2  [.] _dl_map_segments (inlined)
+     0.02%     0.00%  msfw     ld-linux-x86-64.so.2  [.] __mmap64 (inlined)
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffaac8f714
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffaacefec3
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffab14f42d
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffab10c4a9
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffab15052e
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffab174623
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffab1729b5
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffab0b7455
+     0.02%     0.00%  msfw     [unknown]             [.] 0xffffffffab0a1c22
+     0.01%     0.00%  msfw     ld-linux-x86-64.so.2  [.] setup_vdso (inlined)
+     0.01%     0.01%  msfw     [unknown]             [k] 0xffffffffab20c68c
+     0.01%     0.01%  msfw     [unknown]             [k] 0xffffffffab2e5e71
+     0.01%     0.00%  msfw     ld-linux-x86-64.so.2  [.] _start
+     0.01%     0.00%  msfw     [unknown]             [k] 0x0000755d838ef03b
+     0.01%     0.00%  msfw     [unknown]             [.] 0xffffffffac07bc70
+     0.01%     0.00%  msfw     [unknown]             [k] 0xffffffffaac8e311
+     0.01%     0.00%  msfw     [unknown]             [.] 0xffffffffaaeb0516
+     0.01%     0.00%  msfw     [unknown]             [.] 0xffffffffaadc4d60
+     0.01%     0.00%  msfw     [unknown]             [k] 0xffffffffab240ebe
+     0.01%     0.00%  msfw     [unknown]             [.] 0xffffffffab2363e5
+     0.01%     0.00%  msfw     [unknown]             [k] 0xffffffffab240b5c
+     0.01%     0.00%  msfw     [unknown]             [.] 0xffffffffab23615d
+     0.01%     0.00%  msfw     [unknown]             [k] 0xffffffffab23f075
+     0.01%     0.00%  msfw     [unknown]             [k] 0xffffffffab23ef81
+     0.01%     0.00%  msfw     [unknown]             [.] 0xffffffffab2435c5
+     0.01%     0.00%  msfw     [unknown]             [k] 0xffffffffab23ec08
+     0.01%     0.00%  msfw     [unknown]             [.] 0xffffffffab24348d
+     0.01%     0.00%  msfw     [unknown]             [.] 0xffffffffab1971f4
+     0.01%     0.00%  msfw     [unknown]             [k] 0xffffffffab2e6af4
+     0.01%     0.00%  msfw     [unknown]             [.] 0xffffffffab20c68f
+     0.01%     0.00%  msfw     [unknown]             [k] 0xffffffffab2e5e74
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

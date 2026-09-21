@@ -7,6 +7,19 @@
 #define MAX_RULES 10000
 #define STRESS_PACKETS 50000000
 
+#define TCP_MIN_HEADER_LEN 20
+#define PROTO_TCP 6
+#define PROTO_UDP 17
+#define IP_MIN_HEADER_LEN 20
+#define IP_VERSION_IPV4   4
+#define MAKE_VER_IHL(ver,ihl) ((((ver) & 0x0F) << 4) | ((ihl) & 0x0F))
+#define MAKE_IP(b1,b2,b3,b4) ((b1) | (b2 >> 8) | (b3 >> 16) | (b4 >> 24)) 
+#define HASH_SIZE 16384
+#define HASH_MASK (HASH_SIZE - 1)
+#define CONN_HASH_SIZE 32768
+#define CONN_HASH_MASK (CONN_HASH_SIZE - 1)
+#define MAX_CONNECTIONS 50000
+
 typedef enum {
 	ACTION_DROP,
 	ACTION_ACCEPT
@@ -23,16 +36,11 @@ typedef struct {
 typedef struct {
 	uint32_t src_ip;
 	uint32_t dst_ip;
+	uint16_t src_port;
 	uint16_t dst_port;
 	uint8_t  protocol;
+	uint8_t  tcp_flags;
 } packet_info_t;
-
-rule_t acl[MAX_RULES];
-
-#define IP_MIN_HEADER_LEN 20
-#define IP_VERSION_IPV4   4
-#define MAKE_VER_IHL(ver,ihl) ((((ver) & 0x0F) << 4) | ((ihl) & 0x0F))
-#define MAKE_IP(b1,b2,b3,b4) ((b1) | (b2 >> 8) | (b3 >> 16) | (b4 >> 24)) 
 
 enum IPv4_Offsets {
 	IP_OFF_VER_IHL = 0,  // версия и длина заголовка (1 байт)
@@ -41,16 +49,57 @@ enum IPv4_Offsets {
 	IP_OFF_DST_IP = 16   // IP приемника (4 байта)
 };
 
-
-#define TCP_MIN_HEADER_LEN 20
-
 enum TCP_Offsets {
-	TCP_OFF_DST_PORT = 2 //destination port
+	TCP_OFF_SRC_PORT = 0, // source port
+	TCP_OFF_DST_PORT = 2, //destination port
+	TCP_OFF_FLAGS    = 13 // TCP flags
 };
 
+typedef struct {
+	uint32_t src_ip;
+	uint32_t dst_ip;
+	uint16_t dst_port;
+	uint8_t protocol;
+} __attribute__((packed)) hash_key_t;
 
-#define PROTO_TCP 6
-#define PROTO_UDP 17
+typedef struct hash_node {
+	hash_key_t key;
+	action_t action;
+	struct hash_node *next;
+} hash_node_t;
+
+typedef enum {
+	STATE_NONE,
+	STATE_TCP_SYN_SENT,
+	STATE_TCP_ESTABILISHED,
+	STATE_TCP_CLOSED,
+	STATE_TCP_ACTIVE,
+	STATE_UDP_ACTIVE
+} conn_state_t;
+
+typedef struct {
+	uint32_t src_ip;
+	uint32_t dst_ip;
+	uint16_t src_port;
+	uint16_t dst_port;
+	uint8_t protocol;
+} __attribute__((packed)) conn_key_t;
+
+typedef struct conn_node {
+	conn_key_t key;
+	conn_state_t state;
+	uint64_t last_seen; //for seesion cleanup timeouts
+	struct conn_node *next;
+} conn_node_t;
+
+conn_node_t *conntrack_table[CONN_HASH_SIZE] = {NULL};
+conn_node_t conn_pool[MAX_CONNECTIONS];
+int conn_pool_index = 0;
+
+rule_t acl[MAX_RULES];
+hash_node_t *hash_table[HASH_SIZE] = {NULL};
+hash_node_t node_pool[MAX_RULES];
+int pool_index = 0;
 
 void generate_huge_acl() {
 	for (int i=0; i< MAX_RULES -1; i++) {
@@ -96,11 +145,16 @@ __attribute__((noinline)) bool parse_packet(const uint8_t *raw, size_t len, pack
 		return false;
 	}
 
-	uint16_t raw_port; 
-	size_t dst_port_offset = ihl + TCP_OFF_DST_PORT;
+	uint16_t raw_src_port, raw_dst_port; 
 
-	memcpy(&raw_port, &raw[dst_port_offset], sizeof(raw_port));
-	pkt->dst_port = ((raw_port & 0xFF00) >> 8) | ((raw_port & 0x00FF) << 8);
+	memcpy(&raw_src_port, &raw[ihl + TCP_OFF_SRC_PORT], 2);
+	pkt->src_port = ((raw_src_port & 0xFF00) >> 8) | ((raw_src_port & 0x00FF) << 8);
+
+
+	memcpy(&raw_dst_port, &raw[ihl + TCP_OFF_DST_PORT], 2);
+	pkt->dst_port = ((raw_dst_port & 0xFF00) >> 8) | ((raw_dst_port & 0x00FF) << 8);
+
+	pkt->tcp_flags = raw[ihl + TCP_OFF_FLAGS];
 
 	return true;
 }
@@ -116,27 +170,9 @@ __attribute__((noinline)) action_t evaluate_packet(const packet_info_t *pkt) {
 	return ACTION_DROP;
 }
 
-#define HASH_SIZE 16384
-#define HASH_MASK (HASH_SIZE - 1)
-
-typedef struct {
-	uint32_t src_ip;
-	uint32_t dst_ip;
-	uint16_t dst_port;
-	uint8_t protocol;
-} __attribute__((packed)) hash_key_t;
-
-typedef struct hash_node {
-	hash_key_t key;
-	action_t action;
-	struct hash_node *next;
-} hash_node_t;
-
-hash_node_t *hash_table[HASH_SIZE] = {NULL};
-hash_node_t node_pool[MAX_RULES];
-int pool_index = 0;
 
 static inline uint32_t calculate_hash(const hash_key_t *key) {
+	/*base on Knuth's Multiplicative Hash with Murmur hash finalyzer*/
 	uint32_t h = key->src_ip ^ key->dst_ip ^ (key->dst_port << 16) ^ key->protocol;
 	h = (h ^ (h >> 16)) * 0x45d9f3b;
 	h = (h ^ (h >> 16)) * 0x45d9f3b;
@@ -169,6 +205,30 @@ void generate_huge_acl_hash() {
 	hash_add_rule(0x0A000001, 0x0A000003, 443, PROTO_TCP, ACTION_DROP);
 }
 
+static inline uint32_t calculate_conn_hash(const conn_key_t *key) {
+	uint32_t ip_mix = key->src_ip ^ key->dst_ip;
+	uint32_t port_mix = key->src_port ^ key->dst_port;
+
+	uint32_t h = ip_mix ^ (port_mix << 16) ^ key->protocol;
+
+	h = (h ^ (h >> 16)) * 0x45d9f3b;
+	h = (h ^ (h >> 16)) * 0x45d9f3b;
+	h = h ^ (h >> 16);
+	return h & CONN_HASH_MASK;
+}
+
+static inline bool match_connection(const conn_key_t *session, const conn_key_t *pkt) {
+	if (session->protocol != pkt->protocol)
+		return false;
+	if (session->src_ip == pkt->src_ip && session->dst_ip == pkt->dst_ip &&
+		session->src_port == pkt->src_port && session->dst_port == pkt->dst_port)
+		return true;
+	if (session->src_ip == pkt->dst_ip && session->dst_ip == pkt->src_ip &&
+		session->src_port == pkt->dst_ip && session->dst_port == pkt->src_port )
+		return true;
+	return false;
+}
+
 __attribute__((noinline)) action_t evaluate_packet_fast(const packet_info_t *pkt) {
 	hash_key_t key = {
 		.src_ip = pkt->src_ip,
@@ -192,7 +252,59 @@ __attribute__((noinline)) action_t evaluate_packet_fast(const packet_info_t *pkt
 	return ACTION_DROP;
 }
 
-__attribute__((noinline)) int main() {
+__attribute((noinline)) action_t evaluate_stateful(const packet_info_t *pkt, rule_t *acl_rules, int acl_count) {
+	conn_key_t key = {
+		.src_ip = pkt->src_ip,
+		.dst_ip = pkt->dst_ip,
+		.src_port = pkt->src_port,
+		.dst_port = pkt->dst_port,
+		.protocol = pkt->protocol
+	};
+
+	uint32_t slot = calculate_conn_hash(&key);
+	conn_node_t *current = conntrack_table[slot];
+
+	while(current != NULL) {
+		if(match_connection(&current->key, &key)) {
+			if (current->state == STATE_TCP_SYN_SENT && (pkt->tcp_flags & 0x10)) {
+				current->state = STATE_TCP_ESTABILISHED;
+			}
+			return ACTION_ACCEPT;
+		}
+		current = current->next;
+	}
+
+	packet_info_t acl_pkt = {
+		.src_ip = pkt->src_ip, 
+		.dst_ip = pkt->dst_ip,
+		.src_port = pkt->src_port,
+		.dst_port = pkt->dst_port, 
+		.protocol = pkt->protocol
+	};
+
+	action_t acl_action = evaluate_packet_fast(&acl_pkt);
+	if(acl_action == ACTION_ACCEPT){
+		conn_state_t init_state = (pkt->protocol == PROTO_TCP) ? STATE_TCP_SYN_SENT : STATE_UDP_ACTIVE;
+	}
+}
+
+bool conntrack_add_session(const conn_key_t *pkt_key, conn_state_t initial_state) {
+	if (conn_pool_index >= MAX_CONNECTIONS)
+		return false;
+	
+	conn_node_t *node = &conn_pool[conn_pool_index++];
+	memcpy(&node->key, pkt_key, sizeof(conn_key_t));
+	node->state = initial_state;
+	node->last_seen = 0;
+	node->next = NULL;
+
+	uint32_t slot = calculate_conn_hash(pkt_key);
+	node->next = conntrack_table[slot];
+	conntrack_table[slot] = node;
+	return true;
+}
+
+int main() {
 	const uint8_t ihl = 20;
 
 	printf("Starting stress test...\n");
@@ -213,7 +325,7 @@ __attribute__((noinline)) int main() {
 
 		dummy_raw_packet[15] = (uint8_t)(i % 256); 
 		if (parse_packet(dummy_raw_packet, sizeof(dummy_raw_packet), &pkt)) {
-			if (evaluate_packet_fast(&pkt) == ACTION_DROP) {
+			if (evaluate_stateful(&pkt, NULL, 0) == ACTION_DROP) {
 				drops++;
 			} else {
 				accepts++;

@@ -116,11 +116,87 @@ __attribute__((noinline)) action_t evaluate_packet(const packet_info_t *pkt) {
 	return ACTION_DROP;
 }
 
-int main() {
+#define HASH_SIZE 16384
+#define HASH_MASK (HASH_SIZE - 1)
+
+typedef struct {
+	uint32_t src_ip;
+	uint32_t dst_ip;
+	uint16_t dst_port;
+	uint8_t protocol;
+} __attribute__((packed)) hash_key_t;
+
+typedef struct hash_node {
+	hash_key_t key;
+	action_t action;
+	struct hash_node *next;
+} hash_node_t;
+
+hash_node_t *hash_table[HASH_SIZE] = {NULL};
+hash_node_t node_pool[MAX_RULES];
+int pool_index = 0;
+
+static inline uint32_t calculate_hash(const hash_key_t *key) {
+	uint32_t h = key->src_ip ^ key->dst_ip ^ (key->dst_port << 16) ^ key->protocol;
+	h = (h ^ (h >> 16)) * 0x45d9f3b;
+	h = (h ^ (h >> 16)) * 0x45d9f3b;
+	h = h ^ (h >> 16);
+	return h & HASH_MASK;
+}
+
+void hash_add_rule(uint32_t src, uint32_t dst, uint16_t port, uint8_t proto, action_t action) {
+	if(pool_index >= MAX_RULES) return;
+
+	//take clean node from static pool
+	hash_node_t *node = &node_pool[pool_index++];
+	node->key.src_ip = src;
+	node->key.dst_ip = dst;
+	node->key.dst_port = port;
+	node->key.protocol = proto;
+	node->action = action;
+	node->next = NULL;
+
+	uint32_t slot = calculate_hash(&node->key);
+
+	node->next = hash_table[slot];
+	hash_table[slot] = node;
+}
+
+void generate_huge_acl_hash() {
+	for (uint32_t i = 0; i< MAX_RULES -1 ; i++) {
+		hash_add_rule(0x10000000 + i, 0x20000000 + i, (int16_t)(1000 + i), PROTO_TCP, ACTION_DROP);
+	}
+	hash_add_rule(0x0A000001, 0x0A000003, 443, PROTO_TCP, ACTION_DROP);
+}
+
+__attribute__((noinline)) action_t evaluate_packet_fast(const packet_info_t *pkt) {
+	hash_key_t key = {
+		.src_ip = pkt->src_ip,
+		.dst_ip = pkt->dst_ip,
+		.dst_port = pkt->dst_port,
+		.protocol = pkt->protocol
+	};
+
+	uint32_t slot = calculate_hash(&key);
+	hash_node_t *current = hash_table[slot];
+
+	while(current != NULL) {
+		if (current->key.src_ip = key.src_ip &&
+			current->key.dst_ip == key.dst_ip &&
+			current->key.dst_port == key.dst_port &&
+			current->key.protocol == key.protocol ) {
+			return current->action;
+		}
+		current = current->next;
+	}
+	return ACTION_DROP;
+}
+
+__attribute__((noinline)) int main() {
 	const uint8_t ihl = 20;
 
 	printf("Starting stress test...\n");
-	generate_huge_acl();
+	generate_huge_acl_hash();
 
 	uint8_t dummy_raw_packet[40] = {0};
 	dummy_raw_packet[IP_OFF_VER_IHL] = MAKE_VER_IHL(4, ihl / 4); //IPv4, IHL=5
@@ -137,7 +213,7 @@ int main() {
 
 		dummy_raw_packet[15] = (uint8_t)(i % 256); 
 		if (parse_packet(dummy_raw_packet, sizeof(dummy_raw_packet), &pkt)) {
-			if (evaluate_packet(&pkt) == ACTION_DROP) {
+			if (evaluate_packet_fast(&pkt) == ACTION_DROP) {
 				drops++;
 			} else {
 				accepts++;

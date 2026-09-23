@@ -5,4 +5,4 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -g")
 
 add_executable(msfw main.c)
-
+add_executable(rgen gen.c)

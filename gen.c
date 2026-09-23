@@ -46,10 +46,10 @@ int main(int argc, char *argv[]) {
 	for (int i=0; i < black_ip_count; i++) {
 		bool is_local;
 		uint32_t b = t + i;
-		uint8_t b1 = (uint8_t)((b / (254 * 254 * 254)) % 254 +1);
-		uint8_t b2 = (uint8_t)((b / (254 * 254))       % 254 +1);
-		uint8_t b3 = (uint8_t)((b / (254))             % 254 +1);
-		uint8_t b4 = (uint8_t)((b)                     % 254 +1);
+		uint8_t b1 = (uint8_t)((b / (254 * 254 * 254)) % 254 + 1);
+		uint8_t b2 = (uint8_t)((b / (254 * 254))       % 254 + 1);
+		uint8_t b3 = (uint8_t)((b / (254))             % 254 + 1);
+		uint8_t b4 = (uint8_t)((b)                     % 254 + 1);
 		uint32_t my_generated_ip = (b1 << 24) | (b2 << 16) | (b3 << 8) | b4;
 
 		//now check that generated ip is not equal to any of local host addresses
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
 			struct sockaddr_in *sa = (struct sockaddr_in *)ifa->ifa_addr;
 			uint32_t local_ip = ntohl(sa->sin_addr.s_addr);
 
-			fprintf(f, "%d.%d.%d.%d/32;%u -> %d.%d.%d.%d/32;%u",
+			fprintf(f, "%d.%d.%d.%d/32:%u -> %d.%d.%d.%d/32:%u\n",
 				b1,b2,b3,b4,src_port,
 				((local_ip >> 24) & 0xFF),
 				((local_ip >> 16) & 0xFF),
@@ -85,20 +85,20 @@ int main(int argc, char *argv[]) {
 			total_rules_count++;
 		}
 	}
-	fprintf(f, "# -- Section 2 - white IP list\n\n");
+	fprintf(f, "\n\n# -- Section 2 - white IP list\n\n");
 	for (ifa = ifaddr_list; ifa != NULL; ifa = ifa->ifa_next) {
 		struct ifaddrs *ifa_int = NULL;
 		if (ifa->ifa_addr == NULL) continue;
 		if (ifa->ifa_addr->sa_family != AF_INET) continue;
 		struct sockaddr_in *sa = (struct sockaddr_in *)ifa->ifa_addr;
 		uint32_t src_ip = ntohl(sa->sin_addr.s_addr);
-		for (ifa_int = ifaddr_list; ifa != NULL; ifa = ifa->ifa_next) {
+		for (ifa_int = ifaddr_list; ifa_int != NULL; ifa_int = ifa_int->ifa_next) {
 			if (ifa_int->ifa_addr == NULL) continue;
 			if (ifa_int->ifa_addr->sa_family != AF_INET) continue;
 			struct sockaddr_in *sa = (struct sockaddr_in *)ifa_int->ifa_addr;
 			uint32_t dst_ip = ntohl(sa->sin_addr.s_addr);
 
-			fprintf(f, "%d.%d.%d.%d/32;%u -> %d.%d.%d.%d/32;%u",
+			fprintf(f, "%d.%d.%d.%d/32:%u -> %d.%d.%d.%d/32:%u\n",
 				((src_ip >> 24) & 0xFF),
 				((src_ip >> 16) & 0xFF),
 				((src_ip >> 8)  & 0xFF),
